@@ -25,23 +25,31 @@ jobs:
           useradd -m builduser
           echo "builduser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/builduser
 
-      - name: Build environment (Source-ISO - main)
+      - name: Build environment (Source-ISO - Minimal Edition)
         run: |
-          sudo -u builduser git clone https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
+          sudo -u builduser git clone --branch minimal-iso https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
           chown -R builduser:builduser /home/builduser/Source-ISO
           sudo -u builduser bash -c "cd /home/builduser/Source-ISO && PACMAN_OPTS='--noconfirm' bash build_iso"
           ISO_NAME=$(ls /home/builduser/Source-ISO/out/*.iso | xargs basename)
           tar -cJf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO/out .
           echo "Minimal_Edition_Tar=/home/builduser/${ISO_NAME}.tar.xz" >> $GITHUB_ENV
+          mkdir -p ./temp/minimal-edition
+          mv Source-ISO ./temp/minimal-edition
 
-      - name: Build environment (Source-ISO - niriwm-iso)
+      - name: Build environment (Source-ISO - NiriWM Edition)
         run: |
-          sudo -u builduser git clone --branch niriwm-iso https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO-niriwm
-          chown -R builduser:builduser /home/builduser/Source-ISO-niriwm
-          sudo -u builduser bash -c "cd /home/builduser/Source-ISO-niriwm && PACMAN_OPTS='--noconfirm' bash build_iso"
-          ISO_NAME=$(ls /home/builduser/Source-ISO-niriwm/out/*.iso | xargs basename)
-          tar -cJf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO-niriwm/out .
+          sudo -u builduser git clone --branch niriwm-iso https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
+          chown -R builduser:builduser /home/builduser/Source-ISO
+          sudo -u builduser bash -c "cd /home/builduser/Source-ISO && PACMAN_OPTS='--noconfirm' bash build_iso"
+          ISO_NAME=$(ls /home/builduser/Source-ISO/out/*.iso | xargs basename)
+          tar -cJf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO/out .
           echo "NiriWM_Edition_Tar=/home/builduser/${ISO_NAME}.tar.xz" >> $GITHUB_ENV
+          mkdir -p ./temp/niriwm-edition
+          mv Source-ISO ./temp/niriwm-edition
+
+      - name: Clear Temp Source-ISO
+        run: |
+          rm -rf ./temp
 
       - name: Create checksum
         run: |
