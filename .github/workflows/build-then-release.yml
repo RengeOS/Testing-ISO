@@ -29,23 +29,20 @@ jobs:
         run: |
           sudo -u builduser git clone https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
           chown -R builduser:builduser /home/builduser/Source-ISO
-          sudo -u builduser bash -c "cd /home/builduser/Source-ISO && PACMAN_OPTS='--noconfirm' bash scripts/build_iso"
-          mkdir -p out
-          tar -cJf out/Source-ISO.tar.xz -C /home/builduser/Source-ISO/out .
+          sudo -u builduser bash -c "cd /home/builduser/Source-ISO && PACMAN_OPTS='--noconfirm' bash build_iso"
+          tar -cJf /home/builduser/Source-ISO-main.tar.xz -C /home/builduser/Source-ISO/out .
 
       - name: Build environment (Source-ISO - niriwm-iso)
         run: |
           sudo -u builduser git clone --branch niriwm-iso https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO-niriwm
           chown -R builduser:builduser /home/builduser/Source-ISO-niriwm
-          sudo -u builduser bash -c "cd /home/builduser/Source-ISO-niriwm && PACMAN_OPTS='--noconfirm' bash scripts/build_iso"
-          tar -cJf out/Source-ISO-niriwm.tar.xz -C /home/builduser/Source-ISO-niriwm/out .
+          sudo -u builduser bash -c "cd /home/builduser/Source-ISO-niriwm && PACMAN_OPTS='--noconfirm' bash build_iso"
+          tar -cJf /home/builduser/Source-ISO-niriwm.tar.xz -C /home/builduser/Source-ISO-niriwm/out .
 
       - name: Create checksum
         run: |
-          cd out
-          for f in *.tar.xz; do
-            sha256sum "$f" > "$f.sha256"
-          done
+          sha256sum /home/builduser/Source-ISO-main.tar.xz > /home/builduser/Source-ISO-main.tar.xz.sha256
+          sha256sum /home/builduser/Source-ISO-niriwm.tar.xz > /home/builduser/Source-ISO-niriwm.tar.xz.sha256
 
       - name: Fetch release notes
         run: |
@@ -63,5 +60,7 @@ jobs:
           name: ${{ env.RELEASE_TAG }}
           body: ${{ env.RELEASE_NOTES }}
           files: |
-            out/*.tar.xz
-            out/*.sha256
+            /home/builduser/Source-ISO-main.tar.xz
+            /home/builduser/Source-ISO-main.tar.xz.sha256
+            /home/builduser/Source-ISO-niriwm.tar.xz
+            /home/builduser/Source-ISO-niriwm.tar.xz.sha256
