@@ -15,7 +15,7 @@ jobs:
       - name: Configure pacman
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm git sudo fakeroot debugedit wget base-devel
+          pacman -S --noconfirm git sudo fakeroot debugedit wget base-devel archiso
           echo 'PACMAN_AUTH=(sudo)' >> /etc/makepkg.conf
           sed -i 's/^#PACMAN_OPTS=/PACMAN_OPTS=/' /etc/makepkg.conf
           echo 'PACMAN_OPTS="--noconfirm"' >> /etc/makepkg.conf
@@ -30,19 +30,23 @@ jobs:
           sudo -u builduser git clone https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
           chown -R builduser:builduser /home/builduser/Source-ISO
           sudo -u builduser bash -c "cd /home/builduser/Source-ISO && PACMAN_OPTS='--noconfirm' bash build_iso"
-          tar -cJf /home/builduser/Source-ISO-main.tar.xz -C /home/builduser/Source-ISO/out .
+          ISO_NAME=$(ls /home/builduser/Source-ISO/out/*.iso | xargs basename)
+          tar -cJf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO/out .
+          echo "Minimal_Edition_Tar=/home/builduser/${ISO_NAME}.tar.xz" >> $GITHUB_ENV
 
       - name: Build environment (Source-ISO - niriwm-iso)
         run: |
           sudo -u builduser git clone --branch niriwm-iso https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO-niriwm
           chown -R builduser:builduser /home/builduser/Source-ISO-niriwm
           sudo -u builduser bash -c "cd /home/builduser/Source-ISO-niriwm && PACMAN_OPTS='--noconfirm' bash build_iso"
-          tar -cJf /home/builduser/Source-ISO-niriwm.tar.xz -C /home/builduser/Source-ISO-niriwm/out .
+          ISO_NAME=$(ls /home/builduser/Source-ISO-niriwm/out/*.iso | xargs basename)
+          tar -cJf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO-niriwm/out .
+          echo "NiriWM_Edition_Tar=/home/builduser/${ISO_NAME}.tar.xz" >> $GITHUB_ENV
 
       - name: Create checksum
         run: |
-          sha256sum /home/builduser/Source-ISO-main.tar.xz > /home/builduser/Source-ISO-main.tar.xz.sha256
-          sha256sum /home/builduser/Source-ISO-niriwm.tar.xz > /home/builduser/Source-ISO-niriwm.tar.xz.sha256
+          sha256sum ${{ env.Minimal_Edition_Tar }} > ${{ env.Minimal_Edition_Tar }}.sha256
+          sha256sum ${{ env.NiriWM_Edition_Tar }} > ${{ env.NiriWM_Edition_Tar }}.sha256
 
       - name: Fetch release notes
         run: |
@@ -60,7 +64,7 @@ jobs:
           name: ${{ env.RELEASE_TAG }}
           body: ${{ env.RELEASE_NOTES }}
           files: |
-            /home/builduser/Source-ISO-main.tar.xz
-            /home/builduser/Source-ISO-main.tar.xz.sha256
-            /home/builduser/Source-ISO-niriwm.tar.xz
-            /home/builduser/Source-ISO-niriwm.tar.xz.sha256
+            ${{ env.Minimal_Edition_Tar }}
+            ${{ env.Minimal_Edition_Tar }}.sha256
+            ${{ env.NiriWM_Edition_Tar }}
+            ${{ env.NiriWM_Edition_Tar }}.sha256
