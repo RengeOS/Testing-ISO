@@ -15,7 +15,7 @@ jobs:
       - name: Configure pacman
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm git sudo
+          pacman -S --noconfirm git sudo fakeroot debugedit wget base-devel
           echo 'PACMAN_AUTH=(sudo)' >> /etc/makepkg.conf
           sed -i 's/^#PACMAN_OPTS=/PACMAN_OPTS=/' /etc/makepkg.conf
           echo 'PACMAN_OPTS="--noconfirm"' >> /etc/makepkg.conf
