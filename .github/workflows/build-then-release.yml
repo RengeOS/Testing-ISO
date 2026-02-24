@@ -33,8 +33,7 @@ jobs:
           ISO_NAME=$(ls /home/builduser/Source-ISO/out/*.iso | xargs basename)
           tar -cJf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO/out .
           echo "Minimal_Edition_Tar=/home/builduser/${ISO_NAME}.tar.xz" >> $GITHUB_ENV
-          mkdir -p ./temp/minimal-edition
-          mv Source-ISO ./temp/minimal-edition
+          rm -rf /home/builduser/Source-ISO
 
       - name: Build environment (Source-ISO - NiriWM Edition)
         run: |
@@ -44,12 +43,7 @@ jobs:
           ISO_NAME=$(ls /home/builduser/Source-ISO/out/*.iso | xargs basename)
           tar -cJf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO/out .
           echo "NiriWM_Edition_Tar=/home/builduser/${ISO_NAME}.tar.xz" >> $GITHUB_ENV
-          mkdir -p ./temp/niriwm-edition
-          mv Source-ISO ./temp/niriwm-edition
-
-      - name: Clear Temp Source-ISO
-        run: |
-          rm -rf ./temp
+          rm -rf /home/builduser/Source-ISO
 
       - name: Create checksum
         run: |
