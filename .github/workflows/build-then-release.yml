@@ -11,7 +11,6 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v4
-
       - name: Configure pacman
         run: |
           pacman -Syu --noconfirm
@@ -19,47 +18,40 @@ jobs:
           echo 'PACMAN_AUTH=(sudo)' >> /etc/makepkg.conf
           sed -i 's/^#PACMAN_OPTS=/PACMAN_OPTS=/' /etc/makepkg.conf
           echo 'PACMAN_OPTS="--noconfirm"' >> /etc/makepkg.conf
-
       - name: Create build user
         run: |
           useradd -m builduser
           echo "builduser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/builduser
-
       - name: Build environment (Source-ISO - Minimal Edition)
         run: |
           sudo -u builduser git clone --branch minimal-iso https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
           chown -R builduser:builduser /home/builduser/Source-ISO
           sudo -u builduser bash -c "cd /home/builduser/Source-ISO && PACMAN_OPTS='--noconfirm' bash build_iso"
           ISO_NAME=$(ls /home/builduser/Source-ISO/out/*.iso | xargs basename)
-          tar -cJf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO/out .
+          tar -I 'xz -9e -T0' -cf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO/out .
           echo "Minimal_Edition_Tar=/home/builduser/${ISO_NAME}.tar.xz" >> $GITHUB_ENV
           rm -rf /home/builduser/Source-ISO
-
       - name: Build environment (Source-ISO - NiriWM Edition)
         run: |
           sudo -u builduser git clone --branch niriwm-iso https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
           chown -R builduser:builduser /home/builduser/Source-ISO
           sudo -u builduser bash -c "cd /home/builduser/Source-ISO && PACMAN_OPTS='--noconfirm' bash build_iso"
           ISO_NAME=$(ls /home/builduser/Source-ISO/out/*.iso | xargs basename)
-          tar -cJf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO/out .
+          tar -I 'xz -9e -T0' -cf /home/builduser/${ISO_NAME}.tar.xz -C /home/builduser/Source-ISO/out .
           echo "NiriWM_Edition_Tar=/home/builduser/${ISO_NAME}.tar.xz" >> $GITHUB_ENV
           rm -rf /home/builduser/Source-ISO
-
       - name: Create checksum
         run: |
           sha256sum ${{ env.Minimal_Edition_Tar }} > ${{ env.Minimal_Edition_Tar }}.sha256
           sha256sum ${{ env.NiriWM_Edition_Tar }} > ${{ env.NiriWM_Edition_Tar }}.sha256
-
       - name: Fetch release notes
         run: |
           wget -O release-notes.md https://raw.githubusercontent.com/RengeOS/Release-Notes/main/release-notes.md
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
           cat release-notes.md >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-
       - name: Set release tag
         run: echo "RELEASE_TAG=build-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
-
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
