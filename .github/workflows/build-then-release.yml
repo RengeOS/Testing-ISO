@@ -1,0 +1,67 @@
+name: Build Minimal ISO and Release
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure pacman
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm git sudo
+          echo 'PACMAN_AUTH=(sudo)' >> /etc/makepkg.conf
+          sed -i 's/^#PACMAN_OPTS=/PACMAN_OPTS=/' /etc/makepkg.conf
+          echo 'PACMAN_OPTS="--noconfirm"' >> /etc/makepkg.conf
+
+      - name: Create build user
+        run: |
+          useradd -m builduser
+          echo "builduser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/builduser
+
+      - name: Build environment (Source-ISO - main)
+        run: |
+          sudo -u builduser git clone https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
+          chown -R builduser:builduser /home/builduser/Source-ISO
+          sudo -u builduser bash -c "cd /home/builduser/Source-ISO && PACMAN_OPTS='--noconfirm' bash scripts/build_iso"
+          mkdir -p out
+          tar -cJf out/Source-ISO.tar.xz -C /home/builduser/Source-ISO/out .
+
+      - name: Build environment (Source-ISO - niriwm-iso)
+        run: |
+          sudo -u builduser git clone --branch niriwm-iso https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO-niriwm
+          chown -R builduser:builduser /home/builduser/Source-ISO-niriwm
+          sudo -u builduser bash -c "cd /home/builduser/Source-ISO-niriwm && PACMAN_OPTS='--noconfirm' bash scripts/build_iso"
+          tar -cJf out/Source-ISO-niriwm.tar.xz -C /home/builduser/Source-ISO-niriwm/out .
+
+      - name: Create checksum
+        run: |
+          cd out
+          for f in *.tar.xz; do
+            sha256sum "$f" > "$f.sha256"
+          done
+
+      - name: Fetch release notes
+        run: |
+          wget -O release-notes.md https://raw.githubusercontent.com/RengeOS/Release-Notes/main/release-notes.md
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          cat release-notes.md >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Set release tag
+        run: echo "RELEASE_TAG=build-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
+          body: ${{ env.RELEASE_NOTES }}
+          files: |
+            out/*.tar.xz
+            out/*.sha256
