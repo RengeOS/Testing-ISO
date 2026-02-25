@@ -49,5 +49,4 @@ jobs:
           name: ${{ env.RELEASE_TAG }}
           body: ${{ env.RELEASE_NOTES }}
           files: |
-            ${{ env.MINIMAL_PARTS_DIR }}/*
             ${{ env.NIRIWM_PARTS_DIR }}/*
