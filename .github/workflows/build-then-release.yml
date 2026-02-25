@@ -37,7 +37,6 @@ jobs:
           # cp /home/builduser/Source-ISO/out/*.sha256 /home/builduser/minimal_parts/
           # split -b 1800M --numeric-suffixes=1 --suffix-length=3 "$ISO_PATH" "/home/builduser/minimal_parts/${ISO_NAME}.part"
           # --END--
-
           echo "MINIMAL_ISO_NAME=${ISO_NAME}" >> $GITHUB_ENV
           echo "MINIMAL_PARTS_DIR=/home/builduser/minimal_parts" >> $GITHUB_ENV
           rm -rf /home/builduser/Source-ISO
@@ -61,7 +60,7 @@ jobs:
           cat release-notes.md >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Set release tag
-        run: echo "RELEASE_TAG=build-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
+        run: echo "RELEASE_TAG=$(date +%m-%d-%Y)" >> $GITHUB_ENV
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
