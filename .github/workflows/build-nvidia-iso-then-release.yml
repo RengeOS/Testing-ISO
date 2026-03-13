@@ -1,4 +1,4 @@
-name: Build NiriWM ISO and Release
+name: Build Nvidia NiriWM ISO and Release
 on:
   workflow_dispatch:
 permissions:
