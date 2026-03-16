@@ -24,7 +24,7 @@ jobs:
           echo "builduser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/builduser
       - name: Build environment (Source-ISO - Minimal Edition)
         run: |
-          sudo -u builduser git clone --branch minimal-iso https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
+          sudo -u builduser git clone --branch minimal-nvidia https://github.com/RengeOS/Source-ISO /home/builduser/Source-ISO
           chown -R builduser:builduser /home/builduser/Source-ISO
           sudo -u builduser bash -c "cd /home/builduser/Source-ISO && PACMAN_OPTS='--noconfirm' bash build_iso"
           ISO_PATH=$(ls /home/builduser/Source-ISO/out/*.iso | head -n1)
