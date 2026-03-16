@@ -46,4 +46,4 @@ jobs:
           name: ${{ env.RELEASE_TAG }}
           body_path: release-notes.md
           files: |
-            ${{ env.NIRIWM_PARTS_DIR }}/*
+            ${{ env.MINIMAL_PARTS_DIR }}/*
